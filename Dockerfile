@@ -15,6 +15,24 @@ WORKDIR /src/goplaces
 RUN go build -o /tmp/goplaces ./cmd/goplaces
 
 
+# --- download codex binary ---
+FROM alpine:3.21 AS codex-download
+RUN apk add --no-cache curl ca-certificates
+ARG CODEX_VERSION=latest
+RUN mkdir -p /tmp/codex && \
+    if [ "$CODEX_VERSION" = "latest" ]; then \
+      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/latest | grep -oP '"browser_download_url": "\K[^"]*linux-x86_64[^"]*' | head -1); \
+    else \
+      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/tag/$CODEX_VERSION | grep -oP '"browser_download_url": "\K[^"]*linux-x86_64[^"]*' | head -1); \
+    fi && \
+    if [ -n "$DOWNLOAD_URL" ]; then \
+      curl -fsSL "$DOWNLOAD_URL" -o /tmp/codex.tar.gz && \
+      cd /tmp && tar -xzf codex.tar.gz && \
+      find /tmp -name "codex" -type f -executable && \
+      cp /tmp/codex /tmp/codex-bin || true; \
+    fi
+
+
 FROM node:22-bookworm
 
 # ---- Browser deps (Chromium) ----
@@ -76,8 +94,12 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
-# bring in gogcli (as root)
+# bring in codex (as root)
 USER root
+COPY --from=codex-download /tmp/codex-bin /usr/local/bin/codex || true
+RUN chmod +x /usr/local/bin/codex || true
+
+# bring in gogcli (as root)
 COPY --from=gogcli-build /src/gogcli/bin/gog /usr/local/bin/gog
 
 # bring in goplaces (as root)
