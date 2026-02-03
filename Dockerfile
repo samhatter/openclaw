@@ -92,8 +92,8 @@ ENV NODE_ENV=production
 
 # bring in codex (as root)
 USER root
-COPY --from=codex-download /tmp/codex-bin /usr/local/bin/codex || true
-RUN chmod +x /usr/local/bin/codex || true
+COPY --from=codex-download /tmp/codex-bin /usr/local/bin/codex
+RUN chmod +x /usr/local/bin/codex 2>/dev/null || true
 
 # bring in gogcli (as root)
 COPY --from=gogcli-build /src/gogcli/bin/gog /usr/local/bin/gog
