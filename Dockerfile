@@ -54,46 +54,33 @@ RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
       rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
     fi
 
+# Switch to node user and set ownership of /app
+RUN chown node:node /app
+
+USER node
+
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY --chown=node:node ui/package.json ./ui/package.json
 COPY --chown=node:node patches ./patches
 COPY --chown=node:node scripts ./scripts
 
-USER node
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
-# Optionally install Chromium and Xvfb for browser automation.
-# Build with: docker build --build-arg OPENCLAW_INSTALL_BROWSER=1 ...
-# Adds ~300MB but eliminates the 60-90s Playwright install on every container start.
-# Must run after pnpm install so playwright-core is available in node_modules.
-USER root
-ARG OPENCLAW_INSTALL_BROWSER=""
-RUN if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
-      apt-get update && \
-      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb && \
-      mkdir -p /home/node/.cache/ms-playwright && \
-      PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright \
-      node /app/node_modules/playwright-core/cli.js install --with-deps chromium && \
-      chown -R node:node /home/node/.cache/ms-playwright && \
-      apt-get clean && \
-      rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
-    fi
-
-USER node
-COPY --chown=node:node . .
 RUN pnpm build
+COPY --chown=node:node . .
+RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
+
 # Force pnpm for UI build (Bun may fail on ARM/Synology architectures)
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
-# Allow non-root user to write temp files during runtime/tests.
-RUN chown -R node:node /app
-# bring in gogcli
+# bring in gogcli (as root)
+USER root
 COPY --from=gogcli-build /src/gogcli/bin/gog /usr/local/bin/gog
 
-# bring in goplaces
+# bring in goplaces (as root)
 COPY --from=goplaces-build /tmp/goplaces /usr/local/bin/goplaces
 
 # Security hardening: Run as non-root user
