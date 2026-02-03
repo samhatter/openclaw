@@ -53,14 +53,19 @@ RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
       rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
     fi
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY ui/package.json ./ui/package.json
-COPY patches ./patches
-COPY scripts ./scripts
+# Switch to node user and set ownership of /app
+RUN chown node:node /app
+
+USER node
+
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY --chown=node:node ui/package.json ./ui/package.json
+COPY --chown=node:node patches ./patches
+COPY --chown=node:node scripts ./scripts
 
 RUN pnpm install
 
-COPY . .
+COPY --chown=node:node . .
 RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
 # Force pnpm for UI build (Bun may fail on ARM/Synology architectures)
 ENV OPENCLAW_PREFER_PNPM=1
@@ -68,12 +73,11 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
-# Allow non-root user to write temp files during runtime/tests.
-RUN chown -R node:node /app
-# bring in gogcli
+# bring in gogcli (as root)
+USER root
 COPY --from=gogcli-build /src/gogcli/bin/gog /usr/local/bin/gog
 
-# bring in goplaces
+# bring in goplaces (as root)
 COPY --from=goplaces-build /tmp/goplaces /usr/local/bin/goplaces
 
 # Security hardening: Run as non-root user
