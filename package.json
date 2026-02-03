@@ -142,6 +142,7 @@
     "@aws-sdk/client-bedrock": "^3.995.0",
     "@buape/carbon": "0.14.0",
     "@clack/prompts": "^1.0.1",
+    "@openai/codex": "latest",
     "@discordjs/voice": "^0.19.0",
     "@grammyjs/runner": "^2.0.3",
     "@grammyjs/transformer-throttler": "^1.2.1",
