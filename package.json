@@ -149,7 +149,10 @@
     "undici": "^7.20.0",
     "ws": "^8.19.0",
     "yaml": "^2.8.2",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "music-metadata": "11.11.1",
+    "@vector-im/matrix-bot-sdk": "0.8.0-element.3",
+    "@matrix-org/matrix-sdk-crypto-nodejs": "^0.4.0"
   },
   "devDependencies": {
     "@grammyjs/types": "^3.23.0",

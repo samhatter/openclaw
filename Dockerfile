@@ -1,4 +1,41 @@
+# --- build gogcli with Go 1.25 ---
+FROM golang:1.25-bookworm AS gogcli-build
+RUN apt-get update && apt-get install -y --no-install-recommends git make ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+RUN git clone https://github.com/steipete/gogcli.git /src/gogcli
+WORKDIR /src/gogcli
+RUN make
+
+# --- build goplaces with Go 1.25 ---
+FROM golang:1.25-bookworm AS goplaces-build
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+RUN git clone https://github.com/steipete/goplaces.git /src/goplaces
+WORKDIR /src/goplaces
+RUN go build -o /tmp/goplaces ./cmd/goplaces
+
+
 FROM node:22-bookworm
+
+# ---- Browser deps (Chromium) ----
+# Installs a real Chromium executable + common runtime libs + fonts.
+# Keep this near the top so it layers well and is present for runtime.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      chromium \
+      ca-certificates \
+      fonts-liberation \
+      libnss3 \
+      libatk-bridge2.0-0 \
+      libgtk-3-0 \
+      libgbm1 \
+      libasound2 \
+      libxkbcommon0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Common env var used by a bunch of tooling (Playwright/Puppeteer wrappers, etc.)
+# On Debian/Bookworm, chromium is typically here:
+ENV CHROME_BIN=/usr/bin/chromium
 
 # Install Bun (required for build scripts)
 RUN curl -fsSL https://bun.sh/install | bash
@@ -21,7 +58,7 @@ COPY ui/package.json ./ui/package.json
 COPY patches ./patches
 COPY scripts ./scripts
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 COPY . .
 RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
@@ -33,10 +70,13 @@ ENV NODE_ENV=production
 
 # Allow non-root user to write temp files during runtime/tests.
 RUN chown -R node:node /app
+# bring in gogcli
+COPY --from=gogcli-build /src/gogcli/bin/gog /usr/local/bin/gog
+
+# bring in goplaces
+COPY --from=goplaces-build /tmp/goplaces /usr/local/bin/goplaces
 
 # Security hardening: Run as non-root user
-# The node:22-bookworm image includes a 'node' user (uid 1000)
-# This reduces the attack surface by preventing container escape via root privileges
 USER node
 
 # Start gateway server with default config.
