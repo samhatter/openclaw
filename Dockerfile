@@ -17,20 +17,16 @@ RUN go build -o /tmp/goplaces ./cmd/goplaces
 
 # --- download codex binary ---
 FROM alpine:3.21 AS codex-download
-RUN apk add --no-cache curl ca-certificates
-ARG CODEX_VERSION=latest
-RUN mkdir -p /tmp/codex && \
-    if [ "$CODEX_VERSION" = "latest" ]; then \
-      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/latest | grep -oP '"browser_download_url": "\K[^"]*linux-x86_64[^"]*' | head -1); \
-    else \
-      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/tag/$CODEX_VERSION | grep -oP '"browser_download_url": "\K[^"]*linux-x86_64[^"]*' | head -1); \
-    fi && \
+RUN apk add --no-cache curl ca-certificates tar
+RUN mkdir -p /tmp/codex && cd /tmp/codex && \
+    DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/latest | grep -o 'https://github.com/openai/codex/releases/download/[^"]*linux-x86_64[^"]*\.tar\.gz' | head -1) && \
     if [ -n "$DOWNLOAD_URL" ]; then \
-      curl -fsSL "$DOWNLOAD_URL" -o /tmp/codex.tar.gz && \
-      cd /tmp && tar -xzf codex.tar.gz && \
-      find /tmp -name "codex" -type f -executable && \
-      cp /tmp/codex /tmp/codex-bin || true; \
-    fi
+      curl -fsSL "$DOWNLOAD_URL" -o codex.tar.gz && \
+      tar -xzf codex.tar.gz && \
+      if [ -f codex ]; then cp codex /tmp/codex-bin; \
+      elif [ -f bin/codex ]; then cp bin/codex /tmp/codex-bin; \
+      fi \
+    fi && touch /tmp/codex-bin || true
 
 
 FROM node:22-bookworm
