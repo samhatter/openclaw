@@ -14,22 +14,19 @@ RUN git clone https://github.com/steipete/goplaces.git /src/goplaces
 WORKDIR /src/goplaces
 RUN go build -o /tmp/goplaces ./cmd/goplaces
 
-
-# --- download codex binary ---
+# --- download codex binary (linux tarball) ---
 FROM alpine:3.21 AS codex-download
 RUN apk add --no-cache curl ca-certificates tar
-RUN mkdir -p /tmp/codex && cd /tmp/codex && \
-    DOWNLOAD_URL=$(curl -s https://api.github.com/repos/openai/codex/releases/latest | grep -o 'https://github.com/openai/codex/releases/download/[^"]*linux-x86_64[^"]*\.tar\.gz' | head -1) && \
-    if [ -n "$DOWNLOAD_URL" ]; then \
-      curl -fsSL "$DOWNLOAD_URL" -o codex.tar.gz && \
-      tar -xzf codex.tar.gz && \
-      if [ -f codex ]; then cp codex /tmp/codex-bin; \
-      elif [ -f bin/codex ]; then cp bin/codex /tmp/codex-bin; \
-      fi \
-    fi && touch /tmp/codex-bin || true
+
+RUN set -euo pipefail; \
+  mkdir -p /tmp/codex && cd /tmp/codex; \
+  curl -fsSL "https://github.com/openai/codex/releases/download/rust-v0.94.0/codex-x86_64-unknown-linux-gnu.tar.gz" -o codex.tar.gz; \
+  tar -xzf codex.tar.gz; \
+  cp codex-x86_64-unknown-linux-gnu /tmp/codex-bin; \
+  chmod +x /tmp/codex-bin
 
 
-FROM node:22-bookworm
+FROM node:22-trixie
 
 # ---- Browser deps (Chromium) ----
 # Installs a real Chromium executable + common runtime libs + fonts.
