@@ -154,6 +154,12 @@ export type TelegramAccountConfig = {
   reactionLevel?: "off" | "ack" | "minimal" | "extensive";
   /** Heartbeat visibility settings for this channel. */
   heartbeat?: ChannelHeartbeatVisibilityConfig;
+  /** Inbound context suppression settings for this channel. */
+  inboundContext?: {
+    includeSystemEnvelope?: boolean;
+    includeConversationInfo?: boolean;
+    includeSenderInfo?: boolean;
+  };
   /** Controls whether link previews are shown in outbound messages. Default: true. */
   linkPreview?: boolean;
   /**

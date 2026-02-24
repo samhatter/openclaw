@@ -150,6 +150,23 @@ export type AgentDefaultsConfig = {
    * Include elapsed time in message envelopes ("on" | "off", default: "on").
    */
   envelopeElapsed?: "on" | "off";
+  /**
+   * Inbound message context configuration.
+   */
+  inboundContext?: {
+    /**
+     * Include system envelope line (e.g., "[iMessage +1555]") in inbound messages (default: true).
+     */
+    includeSystemEnvelope?: boolean;
+    /**
+     * Include "Conversation info (untrusted metadata)" block in inbound messages (default: true).
+     */
+    includeConversationInfo?: boolean;
+    /**
+     * Include "Sender (untrusted metadata)" block in inbound messages (default: true).
+     */
+    includeSenderInfo?: boolean;
+  };
   /** Optional context window cap (used for runtime estimates + status %). */
   contextTokens?: number;
   /** Optional CLI backends for text-only fallback (claude-cli, etc.). */

@@ -61,6 +61,8 @@ type FormatAgentEnvelope = typeof import("../../auto-reply/envelope.js").formatA
 type FormatInboundEnvelope = typeof import("../../auto-reply/envelope.js").formatInboundEnvelope;
 type ResolveEnvelopeFormatOptions =
   typeof import("../../auto-reply/envelope.js").resolveEnvelopeFormatOptions;
+type ResolveInboundContextOptions =
+  typeof import("../../auto-reply/envelope.js").resolveInboundContextOptions;
 type ResolveStateDir = typeof import("../../config/paths.js").resolveStateDir;
 type RecordInboundSession = typeof import("../../channels/session.js").recordInboundSession;
 type RecordSessionMetaFromInbound =
@@ -227,6 +229,7 @@ export type PluginRuntime = {
       /** @deprecated Prefer `BodyForAgent` + structured user-context blocks (do not build plaintext envelopes for prompts). */
       formatInboundEnvelope: FormatInboundEnvelope;
       resolveEnvelopeFormatOptions: ResolveEnvelopeFormatOptions;
+      resolveInboundContextOptions: ResolveInboundContextOptions;
     };
     routing: {
       resolveAgentRoute: ResolveAgentRoute;

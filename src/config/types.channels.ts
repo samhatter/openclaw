@@ -22,6 +22,23 @@ export type ChannelDefaultsConfig = {
   groupPolicy?: GroupPolicy;
   /** Default heartbeat visibility for all channels. */
   heartbeat?: ChannelHeartbeatVisibilityConfig;
+  /**
+   * Inbound message context configuration (channel-level defaults).
+   */
+  inboundContext?: {
+    /**
+     * Include system envelope line in inbound messages (default: true).
+     */
+    includeSystemEnvelope?: boolean;
+    /**
+     * Include "Conversation info" block in inbound messages (default: true).
+     */
+    includeConversationInfo?: boolean;
+    /**
+     * Include "Sender" block in inbound messages (default: true).
+     */
+    includeSenderInfo?: boolean;
+  };
 };
 
 export type ChannelModelByChannelConfig = Record<string, Record<string, string>>;
@@ -38,6 +55,23 @@ export type ExtensionChannelConfig = {
   dmPolicy?: string;
   groupPolicy?: GroupPolicy;
   accounts?: Record<string, unknown>;
+  /**
+   * Inbound message context configuration (channel-specific overrides).
+   */
+  inboundContext?: {
+    /**
+     * Include system envelope line in inbound messages.
+     */
+    includeSystemEnvelope?: boolean;
+    /**
+     * Include "Conversation info" block in inbound messages.
+     */
+    includeConversationInfo?: boolean;
+    /**
+     * Include "Sender" block in inbound messages.
+     */
+    includeSenderInfo?: boolean;
+  };
   [key: string]: unknown;
 };
 

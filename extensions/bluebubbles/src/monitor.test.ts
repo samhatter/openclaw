@@ -171,6 +171,12 @@ function createMockRuntime(): PluginRuntime {
           mockFormatInboundEnvelope as unknown as PluginRuntime["channel"]["reply"]["formatInboundEnvelope"],
         resolveEnvelopeFormatOptions:
           mockResolveEnvelopeFormatOptions as unknown as PluginRuntime["channel"]["reply"]["resolveEnvelopeFormatOptions"],
+        resolveInboundContextOptions:
+          vi.fn(() => ({
+            includeSystemEnvelope: true,
+            includeConversationInfo: true,
+            includeSenderInfo: true,
+          })) as unknown as PluginRuntime["channel"]["reply"]["resolveInboundContextOptions"],
       },
       routing: {
         resolveAgentRoute:

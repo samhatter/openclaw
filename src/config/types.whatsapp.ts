@@ -76,6 +76,12 @@ type WhatsAppSharedConfig = {
   debounceMs?: number;
   /** Heartbeat visibility settings. */
   heartbeat?: ChannelHeartbeatVisibilityConfig;
+  /** Inbound message context configuration. */
+  inboundContext?: {
+    includeSystemEnvelope?: boolean;
+    includeConversationInfo?: boolean;
+    includeSenderInfo?: boolean;
+  };
 };
 
 type WhatsAppConfigCore = {

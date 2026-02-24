@@ -240,4 +240,72 @@ describe("buildInboundUserContextPrefix", () => {
     const conversationInfo = parseConversationInfoPayload(text);
     expect(conversationInfo["sender"]).toBe("user@example.com");
   });
+
+  it("suppresses conversation info block when includeConversationInfo is false", () => {
+    const text = buildInboundUserContextPrefix(
+      {
+        ChatType: "group",
+        MessageSid: "msg-123",
+        SenderId: "user-456",
+        ConversationLabel: "General Chat",
+        GroupSubject: "Team Discussion",
+      } as TemplateContext,
+      { includeConversationInfo: false },
+    );
+
+    expect(text).not.toContain("Conversation info (untrusted metadata):");
+    expect(text).not.toContain('"message_id"');
+  });
+
+  it("suppresses sender info block when includeSenderInfo is false", () => {
+    const text = buildInboundUserContextPrefix(
+      {
+        ChatType: "group",
+        SenderName: "Alice",
+        SenderId: "user-789",
+        SenderE164: "+15551234567",
+      } as TemplateContext,
+      { includeSenderInfo: false },
+    );
+
+    expect(text).not.toContain("Sender (untrusted metadata):");
+    expect(text).not.toContain('"name": "Alice"');
+  });
+
+  it("returns empty string when all blocks are suppressed", () => {
+    const text = buildInboundUserContextPrefix(
+      {
+        ChatType: "group",
+        MessageSid: "msg-123",
+        SenderName: "Bob",
+      } as TemplateContext,
+      {
+        includeConversationInfo: false,
+        includeSenderInfo: false,
+      },
+    );
+
+    expect(text).toBe("");
+  });
+
+  it("still includes thread starter and reply context when metadata blocks are suppressed", () => {
+    const text = buildInboundUserContextPrefix(
+      {
+        ChatType: "group",
+        MessageSid: "msg-123",
+        SenderName: "Alice",
+        ThreadStarterBody: "Welcome to the team!",
+        ReplyToBody: "Thanks!",
+      } as TemplateContext,
+      {
+        includeConversationInfo: false,
+        includeSenderInfo: false,
+      },
+    );
+
+    expect(text).toContain("Thread starter (untrusted, for context):");
+    expect(text).toContain("Replied message (untrusted, for context):");
+    expect(text).not.toContain("Conversation info");
+    expect(text).not.toContain("Sender (untrusted metadata)");
+  });
 });

@@ -20,6 +20,10 @@ import { clearCommandLane, getQueueSize } from "../../process/command-queue.js";
 import { normalizeMainKey } from "../../routing/session-key.js";
 import { isReasoningTagProvider } from "../../utils/provider-utils.js";
 import { hasControlCommand } from "../command-detection.js";
+import {
+  resolveEnvelopeFormatOptions,
+  resolveInboundContextOptions,
+} from "../envelope.js";
 import { buildInboundMediaNote } from "../media-note.js";
 import type { MsgContext, TemplateContext } from "../templating.js";
 import {
@@ -278,6 +282,13 @@ export async function runPreparedReply(
     isNewSession &&
     ((baseBodyTrimmedRaw.length === 0 && rawBodyTrimmed.length > 0) || isBareNewOrReset);
   const baseBodyFinal = isBareSessionReset ? BARE_SESSION_RESET_PROMPT : baseBody;
+  
+  // Resolve inbound context options with channel-specific overrides
+  const inboundCtxOptions = resolveInboundContextOptions({
+    cfg,
+    channelId: ctx.OriginatingChannel,
+  });
+  
   const inboundUserContext = buildInboundUserContextPrefix(
     isNewSession
       ? {
@@ -287,6 +298,10 @@ export async function runPreparedReply(
             : {}),
         }
       : { ...sessionCtx, ThreadStarterBody: undefined },
+    {
+      includeConversationInfo: inboundCtxOptions.includeConversationInfo,
+      includeSenderInfo: inboundCtxOptions.includeSenderInfo,
+    },
   );
   const baseBodyForPrompt = isBareSessionReset
     ? baseBodyFinal

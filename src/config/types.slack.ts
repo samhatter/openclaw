@@ -175,6 +175,12 @@ export type SlackAccountConfig = {
   channels?: Record<string, SlackChannelConfig>;
   /** Heartbeat visibility settings for this channel. */
   heartbeat?: ChannelHeartbeatVisibilityConfig;
+  /** Inbound context suppression settings for this channel. */
+  inboundContext?: {
+    includeSystemEnvelope?: boolean;
+    includeConversationInfo?: boolean;
+    includeSenderInfo?: boolean;
+  };
   /** Outbound response prefix override for this channel/account. */
   responsePrefix?: string;
   /**

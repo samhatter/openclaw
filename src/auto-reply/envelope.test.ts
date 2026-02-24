@@ -4,6 +4,7 @@ import {
   formatAgentEnvelope,
   formatInboundEnvelope,
   resolveEnvelopeFormatOptions,
+  resolveInboundContextOptions,
 } from "./envelope.js";
 
 describe("formatAgentEnvelope", () => {
@@ -160,6 +161,127 @@ describe("formatInboundEnvelope", () => {
       includeTimestamp: false,
       includeElapsed: false,
       userTimezone: "Europe/Vienna",
+      includeSystemEnvelope: true,
+    });
+  });
+
+  it("suppresses system envelope when includeSystemEnvelope is false", () => {
+    const body = formatInboundEnvelope({
+      channel: "iMessage",
+      from: "+1555",
+      body: "hello world",
+      chatType: "direct",
+      envelope: { includeSystemEnvelope: false },
+    });
+    expect(body).toBe("hello world");
+  });
+
+  it("suppresses system envelope for group messages when includeSystemEnvelope is false", () => {
+    const body = formatInboundEnvelope({
+      channel: "Discord",
+      from: "Guild #general",
+      body: "hi there",
+      chatType: "channel",
+      senderLabel: "Alice",
+      envelope: { includeSystemEnvelope: false },
+    });
+    // Should still prefix sender in group chats, just no envelope
+    expect(body).toBe("Alice: hi there");
+  });
+});
+
+describe("resolveInboundContextOptions", () => {
+  it("defaults all options to true when no config is provided", () => {
+    const options = resolveInboundContextOptions({});
+    expect(options).toEqual({
+      includeSystemEnvelope: true,
+      includeConversationInfo: true,
+      includeSenderInfo: true,
+    });
+  });
+
+  it("uses agent defaults when configured", () => {
+    const options = resolveInboundContextOptions({
+      cfg: {
+        agents: {
+          defaults: {
+            inboundContext: {
+              includeSystemEnvelope: false,
+              includeConversationInfo: false,
+              includeSenderInfo: true,
+            },
+          },
+        },
+      },
+    });
+    expect(options).toEqual({
+      includeSystemEnvelope: false,
+      includeConversationInfo: false,
+      includeSenderInfo: true,
+    });
+  });
+
+  it("uses channel defaults over agent defaults", () => {
+    const options = resolveInboundContextOptions({
+      cfg: {
+        agents: {
+          defaults: {
+            inboundContext: {
+              includeSystemEnvelope: false,
+              includeConversationInfo: false,
+              includeSenderInfo: false,
+            },
+          },
+        },
+        channels: {
+          defaults: {
+            inboundContext: {
+              includeSystemEnvelope: true,
+              includeConversationInfo: true,
+            },
+          },
+        },
+      },
+    });
+    expect(options).toEqual({
+      includeSystemEnvelope: true,
+      includeConversationInfo: true,
+      includeSenderInfo: false,
+    });
+  });
+
+  it("uses channel-specific overrides over channel defaults", () => {
+    const options = resolveInboundContextOptions({
+      cfg: {
+        agents: {
+          defaults: {
+            inboundContext: {
+              includeSystemEnvelope: false,
+              includeConversationInfo: false,
+              includeSenderInfo: false,
+            },
+          },
+        },
+        channels: {
+          defaults: {
+            inboundContext: {
+              includeSystemEnvelope: true,
+            },
+          },
+          telegram: {
+            inboundContext: {
+              includeSystemEnvelope: false,
+              includeConversationInfo: true,
+            },
+          },
+        },
+      },
+      channelId: "telegram",
+    });
+    expect(options).toEqual({
+      includeSystemEnvelope: false,
+      includeConversationInfo: true,
+      includeSenderInfo: false,
     });
   });
 });

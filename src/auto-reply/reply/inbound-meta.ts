@@ -10,6 +10,17 @@ function safeTrim(value: unknown): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+export type InboundContextOptions = {
+  /**
+   * Include "Conversation info (untrusted metadata)" block (default: true).
+   */
+  includeConversationInfo?: boolean;
+  /**
+   * Include "Sender (untrusted metadata)" block (default: true).
+   */
+  includeSenderInfo?: boolean;
+};
+
 export function buildInboundMetaSystemPrompt(ctx: TemplateContext): string {
   const chatType = normalizeChatType(ctx.ChatType);
   const isDirect = !chatType || chatType === "direct";
@@ -59,10 +70,17 @@ export function buildInboundMetaSystemPrompt(ctx: TemplateContext): string {
   ].join("\n");
 }
 
-export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
+export function buildInboundUserContextPrefix(
+  ctx: TemplateContext,
+  options?: InboundContextOptions,
+): string {
   const blocks: string[] = [];
   const chatType = normalizeChatType(ctx.ChatType);
   const isDirect = !chatType || chatType === "direct";
+
+  // Default all options to true (preserve current behavior)
+  const includeConversationInfo = options?.includeConversationInfo !== false;
+  const includeSenderInfo = options?.includeSenderInfo !== false;
 
   const messageId = safeTrim(ctx.MessageSid);
   const messageIdFull = safeTrim(ctx.MessageSidFull);
@@ -94,7 +112,7 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
         ? ctx.InboundHistory.length
         : undefined,
   };
-  if (Object.values(conversationInfo).some((v) => v !== undefined)) {
+  if (includeConversationInfo && Object.values(conversationInfo).some((v) => v !== undefined)) {
     blocks.push(
       [
         "Conversation info (untrusted metadata):",
@@ -119,7 +137,7 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
         tag: safeTrim(ctx.SenderTag),
         e164: safeTrim(ctx.SenderE164),
       };
-  if (senderInfo?.label) {
+  if (includeSenderInfo && senderInfo?.label) {
     blocks.push(
       ["Sender (untrusted metadata):", "```json", JSON.stringify(senderInfo, null, 2), "```"].join(
         "\n",

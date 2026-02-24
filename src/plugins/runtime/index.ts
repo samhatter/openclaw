@@ -21,6 +21,7 @@ import {
   formatAgentEnvelope,
   formatInboundEnvelope,
   resolveEnvelopeFormatOptions,
+  resolveInboundContextOptions,
 } from "../../auto-reply/envelope.js";
 import {
   createInboundDebouncer,
@@ -309,6 +310,7 @@ function createRuntimeChannel(): PluginRuntime["channel"] {
       /** @deprecated Prefer `BodyForAgent` + structured user-context blocks (do not build plaintext envelopes for prompts). */
       formatInboundEnvelope,
       resolveEnvelopeFormatOptions,
+      resolveInboundContextOptions,
     },
     routing: {
       resolveAgentRoute,

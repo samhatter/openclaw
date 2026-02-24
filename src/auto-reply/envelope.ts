@@ -37,6 +37,11 @@ export type EnvelopeFormatOptions = {
    * Optional user timezone used when timezone="user".
    */
   userTimezone?: string;
+  /**
+   * Include system envelope line (e.g., "[iMessage +1555]") in formatted output (default: true).
+   * When false, returns only the message body without the bracketed envelope prefix.
+   */
+  includeSystemEnvelope?: boolean;
 };
 
 type NormalizedEnvelopeOptions = {
@@ -62,13 +67,56 @@ function sanitizeEnvelopeHeaderPart(value: string): string {
     .trim();
 }
 
-export function resolveEnvelopeFormatOptions(cfg?: OpenClawConfig): EnvelopeFormatOptions {
+export function resolveEnvelopeFormatOptions(
+  cfg?: OpenClawConfig,
+  channelId?: string,
+): EnvelopeFormatOptions {
   const defaults = cfg?.agents?.defaults;
+  const inboundCtxOptions = resolveInboundContextOptions({ cfg, channelId });
   return {
     timezone: defaults?.envelopeTimezone,
     includeTimestamp: defaults?.envelopeTimestamp !== "off",
     includeElapsed: defaults?.envelopeElapsed !== "off",
     userTimezone: defaults?.userTimezone,
+    includeSystemEnvelope: inboundCtxOptions.includeSystemEnvelope,
+  };
+}
+
+/**
+ * Resolve inbound context options with channel-specific overrides.
+ * Precedence: channel override > channel defaults > agent defaults > true (default).
+ */
+export function resolveInboundContextOptions(params: {
+  cfg?: OpenClawConfig;
+  channelId?: string;
+}): {
+  includeSystemEnvelope: boolean;
+  includeConversationInfo: boolean;
+  includeSenderInfo: boolean;
+} {
+  const agentDefaults = params.cfg?.agents?.defaults?.inboundContext;
+  const channelDefaults = params.cfg?.channels?.defaults?.inboundContext;
+  const channelOverride = params.channelId
+    ? (params.cfg?.channels?.[params.channelId] as { inboundContext?: Record<string, boolean> })
+        ?.inboundContext
+    : undefined;
+
+  return {
+    includeSystemEnvelope:
+      channelOverride?.includeSystemEnvelope ??
+      channelDefaults?.includeSystemEnvelope ??
+      agentDefaults?.includeSystemEnvelope ??
+      true,
+    includeConversationInfo:
+      channelOverride?.includeConversationInfo ??
+      channelDefaults?.includeConversationInfo ??
+      agentDefaults?.includeConversationInfo ??
+      true,
+    includeSenderInfo:
+      channelOverride?.includeSenderInfo ??
+      channelDefaults?.includeSenderInfo ??
+      agentDefaults?.includeSenderInfo ??
+      true,
   };
 }
 
@@ -153,6 +201,10 @@ export function formatAgentEnvelope(params: AgentEnvelopeParams): string {
   const channel = sanitizeEnvelopeHeaderPart(params.channel?.trim() || "Channel");
   const parts: string[] = [channel];
   const resolved = normalizeEnvelopeOptions(params.envelope);
+  
+  // Default includeSystemEnvelope to true (preserve current behavior)
+  const includeSystemEnvelope = params.envelope?.includeSystemEnvelope !== false;
+  
   let elapsed: string | undefined;
   if (resolved.includeElapsed && params.timestamp && params.previousTimestamp) {
     const currentMs =
@@ -183,6 +235,12 @@ export function formatAgentEnvelope(params: AgentEnvelopeParams): string {
   if (ts) {
     parts.push(ts);
   }
+  
+  // When includeSystemEnvelope is false, return only the body without the bracketed header
+  if (!includeSystemEnvelope) {
+    return params.body;
+  }
+  
   const header = `[${parts.join(" ")}]`;
   return `${header} ${params.body}`;
 }
