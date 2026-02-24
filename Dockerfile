@@ -1,10 +1,17 @@
-FROM node:22-bookworm@sha256:cd7bcd2e7a1e6f72052feb023c7f6b722205d3fcab7bbcbd2d1bfdab10b1e935
+FROM node:22-trixie
 
 # Install Bun (required for build scripts)
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 RUN corepack enable
+
+# Install codex binary
+ARG CODEX_VERSION=rust-v0.94.0
+RUN curl -fsSL "https://github.com/openai/codex/releases/download/${CODEX_VERSION}/codex-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/codex.tgz && \
+    tar -xzf /tmp/codex.tgz -C /tmp && \
+    install -m 0755 /tmp/codex-x86_64-unknown-linux-gnu /usr/local/bin/codex && \
+    rm -rf /tmp/codex.tgz /tmp/codex-x86_64-unknown-linux-gnu
 
 # Install goplaces binary
 ARG GOPLACES_VERSION=v0.3.0
