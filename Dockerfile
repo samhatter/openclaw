@@ -6,6 +6,13 @@ ENV PATH="/root/.bun/bin:${PATH}"
 
 RUN corepack enable
 
+# Install goplaces binary
+ARG GOPLACES_VERSION=v0.3.0
+RUN curl -fsSL "https://github.com/steipete/goplaces/releases/download/${GOPLACES_VERSION}/goplaces_${GOPLACES_VERSION#v}_linux_amd64.tar.gz" -o /tmp/goplaces.tar.gz && \
+    tar -xzf /tmp/goplaces.tar.gz -C /tmp && \
+    install -m 0755 /tmp/goplaces /usr/local/bin/goplaces && \
+    rm -rf /tmp/goplaces.tar.gz /tmp/goplaces
+
 WORKDIR /app
 RUN chown node:node /app
 
