@@ -68,6 +68,7 @@ RUN if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 
+
 USER node
 COPY --chown=node:node . .
 RUN pnpm build
@@ -75,6 +76,9 @@ RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
+# adding openclaw to path and making it executable
+USER root
+RUN chmod +x /app/openclaw.mjs && ln -sf /app/openclaw.mjs /usr/local/bin/openclaw
 ENV NODE_ENV=production
 
 # Security hardening: Run as non-root user
