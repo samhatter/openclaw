@@ -13,6 +13,13 @@ RUN curl -fsSL "https://github.com/steipete/goplaces/releases/download/${GOPLACE
     install -m 0755 /tmp/goplaces /usr/local/bin/goplaces && \
     rm -rf /tmp/goplaces.tar.gz /tmp/goplaces
 
+# Install gogcli binary
+ARG GOGCLI_VERSION=v0.11.0
+RUN curl -fsSL "https://github.com/steipete/gogcli/releases/download/${GOGCLI_VERSION}/gogcli_${GOGCLI_VERSION#v}_linux_amd64.tar.gz" -o /tmp/gogcli.tar.gz && \
+    tar -xzf /tmp/gogcli.tar.gz -C /tmp && \
+    install -m 0755 /tmp/gog /usr/local/bin/gog && \
+    rm -rf /tmp/gogcli.tar.gz /tmp/gog
+
 WORKDIR /app
 RUN chown node:node /app
 
