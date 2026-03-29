@@ -231,6 +231,23 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
         docker-ce-cli docker-compose-plugin; \
     fi
 
+# Optionally install Codex CLI for the bundled codex-cli backend.
+# Build with: docker build --build-arg OPENCLAW_INSTALL_CODEX_CLI=1 ...
+ARG OPENCLAW_INSTALL_CODEX_CLI=""
+ARG OPENCLAW_CODEX_VERSION="rust-v0.94.0"
+RUN if [ -n "$OPENCLAW_INSTALL_CODEX_CLI" ]; then \
+      arch="$(dpkg --print-architecture)" && \
+      case "$arch" in \
+        amd64) codex_arch="x86_64-unknown-linux-gnu" ;; \
+        arm64) codex_arch="aarch64-unknown-linux-gnu" ;; \
+        *) echo "Unsupported Codex CLI architecture: $arch" >&2; exit 1 ;; \
+      esac && \
+      curl -fsSL "https://github.com/openai/codex/releases/download/${OPENCLAW_CODEX_VERSION}/codex-${codex_arch}.tar.gz" -o /tmp/codex.tgz && \
+      tar -xzf /tmp/codex.tgz -C /tmp && \
+      install -m 0755 "/tmp/codex-${codex_arch}" /usr/local/bin/codex && \
+      rm -f /tmp/codex.tgz "/tmp/codex-${codex_arch}"; \
+    fi
+
 # Expose the CLI binary without requiring npm global writes as non-root.
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  && chmod 755 /app/openclaw.mjs

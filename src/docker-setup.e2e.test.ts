@@ -382,6 +382,22 @@ describe("scripts/docker/setup.sh", () => {
     expect(log).toContain("config set agents.defaults.sandbox.mode off");
   });
 
+  it("forwards OPENCLAW_INSTALL_CODEX_CLI to local docker builds", async () => {
+    const activeSandbox = requireSandbox(sandbox);
+    await resetDockerLog(activeSandbox);
+
+    const result = runDockerSetup(activeSandbox, {
+      OPENCLAW_INSTALL_CODEX_CLI: "1",
+    });
+
+    expect(result.status).toBe(0);
+    const envFile = await readFile(join(activeSandbox.rootDir, ".env"), "utf8");
+    expect(envFile).toContain("OPENCLAW_INSTALL_CODEX_CLI=1");
+
+    const log = await readDockerLog(activeSandbox);
+    expect(log).toContain("--build-arg OPENCLAW_INSTALL_CODEX_CLI=1");
+  });
+
   it("resets stale sandbox mode and overlay when sandbox is not active", async () => {
     const activeSandbox = requireSandbox(sandbox);
     await resetDockerLog(activeSandbox);

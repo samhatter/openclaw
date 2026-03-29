@@ -37,6 +37,18 @@ describe("Dockerfile", () => {
     expect(dockerfile).toContain("apt-get install -y --no-install-recommends xvfb");
   });
 
+  it("supports optional Codex CLI installs for the bundled codex-cli backend", async () => {
+    const dockerfile = await readFile(dockerfilePath, "utf8");
+    expect(dockerfile).toContain('ARG OPENCLAW_INSTALL_CODEX_CLI=""');
+    expect(dockerfile).toContain('ARG OPENCLAW_CODEX_VERSION="rust-v0.94.0"');
+    expect(dockerfile).toContain(
+      'curl -fsSL "https://github.com/openai/codex/releases/download/${OPENCLAW_CODEX_VERSION}/codex-${codex_arch}.tar.gz"',
+    );
+    expect(dockerfile).toContain('install -m 0755 "/tmp/codex-${codex_arch}" /usr/local/bin/codex');
+    expect(dockerfile).toContain('amd64) codex_arch="x86_64-unknown-linux-gnu"');
+    expect(dockerfile).toContain('arm64) codex_arch="aarch64-unknown-linux-gnu"');
+  });
+
   it("prunes runtime dependencies after the build stage", async () => {
     const dockerfile = await readFile(dockerfilePath, "utf8");
     expect(dockerfile).toContain("FROM build AS runtime-assets");
