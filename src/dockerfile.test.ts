@@ -45,8 +45,8 @@ describe("Dockerfile", () => {
       'curl -fsSL "https://github.com/openai/codex/releases/download/${OPENCLAW_CODEX_VERSION}/codex-${codex_arch}.tar.gz"',
     );
     expect(dockerfile).toContain('install -m 0755 "/tmp/codex-${codex_arch}" /usr/local/bin/codex');
-    expect(dockerfile).toContain('amd64) codex_arch="x86_64-unknown-linux-gnu"');
-    expect(dockerfile).toContain('arm64) codex_arch="aarch64-unknown-linux-gnu"');
+    expect(dockerfile).toContain('amd64) codex_arch="x86_64-unknown-linux-musl"');
+    expect(dockerfile).toContain('arm64) codex_arch="aarch64-unknown-linux-musl"');
   });
 
   it("keeps gog and goplaces installs enabled by default for fork helper workflows", async () => {

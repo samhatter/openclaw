@@ -270,8 +270,8 @@ ARG OPENCLAW_CODEX_VERSION="rust-v0.94.0"
 RUN if [ -n "$OPENCLAW_INSTALL_CODEX_CLI" ]; then \
       arch="$(dpkg --print-architecture)" && \
       case "$arch" in \
-        amd64) codex_arch="x86_64-unknown-linux-gnu" ;; \
-        arm64) codex_arch="aarch64-unknown-linux-gnu" ;; \
+        amd64) codex_arch="x86_64-unknown-linux-musl" ;; \
+        arm64) codex_arch="aarch64-unknown-linux-musl" ;; \
         *) echo "Unsupported Codex CLI architecture: $arch" >&2; exit 1 ;; \
       esac && \
       curl -fsSL "https://github.com/openai/codex/releases/download/${OPENCLAW_CODEX_VERSION}/codex-${codex_arch}.tar.gz" -o /tmp/codex.tgz && \
