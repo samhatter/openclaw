@@ -398,6 +398,40 @@ describe("scripts/docker/setup.sh", () => {
     expect(log).toContain("--build-arg OPENCLAW_INSTALL_CODEX_CLI=1");
   });
 
+  it("forwards OPENCLAW_INSTALL_BROWSER to local docker builds", async () => {
+    const activeSandbox = requireSandbox(sandbox);
+    await resetDockerLog(activeSandbox);
+
+    const result = runDockerSetup(activeSandbox, {
+      OPENCLAW_INSTALL_BROWSER: "1",
+    });
+
+    expect(result.status).toBe(0);
+    const envFile = await readFile(join(activeSandbox.rootDir, ".env"), "utf8");
+    expect(envFile).toContain("OPENCLAW_INSTALL_BROWSER=1");
+
+    const log = await readDockerLog(activeSandbox);
+    expect(log).toContain("--build-arg OPENCLAW_INSTALL_BROWSER=1");
+  });
+
+  it("defaults codex, gog, and goplaces helper CLIs on for local docker builds", async () => {
+    const activeSandbox = requireSandbox(sandbox);
+    await resetDockerLog(activeSandbox);
+
+    const result = runDockerSetup(activeSandbox);
+
+    expect(result.status).toBe(0);
+    const envFile = await readFile(join(activeSandbox.rootDir, ".env"), "utf8");
+    expect(envFile).toContain("OPENCLAW_INSTALL_CODEX_CLI=1");
+    expect(envFile).toContain("OPENCLAW_INSTALL_GOG_CLI=1");
+    expect(envFile).toContain("OPENCLAW_INSTALL_GOPLACES=1");
+
+    const log = await readDockerLog(activeSandbox);
+    expect(log).toContain("--build-arg OPENCLAW_INSTALL_CODEX_CLI=1");
+    expect(log).toContain("--build-arg OPENCLAW_INSTALL_GOG_CLI=1");
+    expect(log).toContain("--build-arg OPENCLAW_INSTALL_GOPLACES=1");
+  });
+
   it("resets stale sandbox mode and overlay when sandbox is not active", async () => {
     const activeSandbox = requireSandbox(sandbox);
     await resetDockerLog(activeSandbox);

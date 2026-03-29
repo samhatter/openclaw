@@ -373,6 +373,18 @@ if [[ -n "$SANDBOX_ENABLED" ]]; then
   fi
 fi
 
+# Local fork builds expect these helper CLIs to be available in the image by
+# default. Leave browser install opt-in because it adds significant image size.
+if [[ -z "${OPENCLAW_INSTALL_CODEX_CLI+x}" ]]; then
+  export OPENCLAW_INSTALL_CODEX_CLI=1
+fi
+if [[ -z "${OPENCLAW_INSTALL_GOG_CLI+x}" ]]; then
+  export OPENCLAW_INSTALL_GOG_CLI=1
+fi
+if [[ -z "${OPENCLAW_INSTALL_GOPLACES+x}" ]]; then
+  export OPENCLAW_INSTALL_GOPLACES=1
+fi
+
 VALID_MOUNTS=()
 if [[ -n "$EXTRA_MOUNTS" ]]; then
   IFS=',' read -r -a mounts <<<"$EXTRA_MOUNTS"
@@ -458,8 +470,11 @@ upsert_env "$ENV_FILE" \
   OPENCLAW_SANDBOX \
   OPENCLAW_DOCKER_SOCKET \
   DOCKER_GID \
+  OPENCLAW_INSTALL_BROWSER \
   OPENCLAW_INSTALL_DOCKER_CLI \
   OPENCLAW_INSTALL_CODEX_CLI \
+  OPENCLAW_INSTALL_GOG_CLI \
+  OPENCLAW_INSTALL_GOPLACES \
   OPENCLAW_ALLOW_INSECURE_PRIVATE_WS \
   OPENCLAW_TZ
 
@@ -468,8 +483,11 @@ if [[ "$IMAGE_NAME" == "openclaw:local" ]]; then
   docker build \
     --build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}" \
     --build-arg "OPENCLAW_EXTENSIONS=${OPENCLAW_EXTENSIONS}" \
+    --build-arg "OPENCLAW_INSTALL_BROWSER=${OPENCLAW_INSTALL_BROWSER:-}" \
     --build-arg "OPENCLAW_INSTALL_DOCKER_CLI=${OPENCLAW_INSTALL_DOCKER_CLI:-}" \
     --build-arg "OPENCLAW_INSTALL_CODEX_CLI=${OPENCLAW_INSTALL_CODEX_CLI:-}" \
+    --build-arg "OPENCLAW_INSTALL_GOG_CLI=${OPENCLAW_INSTALL_GOG_CLI:-}" \
+    --build-arg "OPENCLAW_INSTALL_GOPLACES=${OPENCLAW_INSTALL_GOPLACES:-}" \
     -t "$IMAGE_NAME" \
     -f "$ROOT_DIR/Dockerfile" \
     "$ROOT_DIR"

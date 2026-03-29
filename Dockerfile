@@ -199,6 +199,38 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
       chown -R node:node /home/node/.cache/ms-playwright; \
     fi
 
+# Install gog for Gmail automation workflows.
+# Disable with: docker build --build-arg OPENCLAW_INSTALL_GOG_CLI= ...
+ARG OPENCLAW_INSTALL_GOG_CLI="1"
+ARG OPENCLAW_GOG_CLI_VERSION="v0.11.0"
+RUN if [ -n "$OPENCLAW_INSTALL_GOG_CLI" ]; then \
+      arch="$(dpkg --print-architecture)" && \
+      if [ "$arch" != "amd64" ]; then \
+        echo "Skipping gog install on unsupported architecture: $arch" >&2; \
+        exit 0; \
+      fi && \
+      curl -fsSL "https://github.com/steipete/gogcli/releases/download/${OPENCLAW_GOG_CLI_VERSION}/gogcli_${OPENCLAW_GOG_CLI_VERSION#v}_linux_amd64.tar.gz" -o /tmp/gogcli.tar.gz && \
+      tar -xzf /tmp/gogcli.tar.gz -C /tmp && \
+      install -m 0755 /tmp/gog /usr/local/bin/gog && \
+      rm -f /tmp/gogcli.tar.gz /tmp/gog; \
+    fi
+
+# Install goplaces for Google Places workflows.
+# Disable with: docker build --build-arg OPENCLAW_INSTALL_GOPLACES= ...
+ARG OPENCLAW_INSTALL_GOPLACES="1"
+ARG OPENCLAW_GOPLACES_VERSION="v0.3.0"
+RUN if [ -n "$OPENCLAW_INSTALL_GOPLACES" ]; then \
+      arch="$(dpkg --print-architecture)" && \
+      if [ "$arch" != "amd64" ]; then \
+        echo "Skipping goplaces install on unsupported architecture: $arch" >&2; \
+        exit 0; \
+      fi && \
+      curl -fsSL "https://github.com/steipete/goplaces/releases/download/${OPENCLAW_GOPLACES_VERSION}/goplaces_${OPENCLAW_GOPLACES_VERSION#v}_linux_amd64.tar.gz" -o /tmp/goplaces.tar.gz && \
+      tar -xzf /tmp/goplaces.tar.gz -C /tmp && \
+      install -m 0755 /tmp/goplaces /usr/local/bin/goplaces && \
+      rm -f /tmp/goplaces.tar.gz /tmp/goplaces; \
+    fi
+
 # Optionally install Docker CLI for sandbox container management.
 # Build with: docker build --build-arg OPENCLAW_INSTALL_DOCKER_CLI=1 ...
 # Adds ~50MB. Only the CLI is installed — no Docker daemon.
@@ -232,8 +264,8 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
     fi
 
 # Optionally install Codex CLI for the bundled codex-cli backend.
-# Build with: docker build --build-arg OPENCLAW_INSTALL_CODEX_CLI=1 ...
-ARG OPENCLAW_INSTALL_CODEX_CLI=""
+# Disable with: docker build --build-arg OPENCLAW_INSTALL_CODEX_CLI= ...
+ARG OPENCLAW_INSTALL_CODEX_CLI="1"
 ARG OPENCLAW_CODEX_VERSION="rust-v0.94.0"
 RUN if [ -n "$OPENCLAW_INSTALL_CODEX_CLI" ]; then \
       arch="$(dpkg --print-architecture)" && \

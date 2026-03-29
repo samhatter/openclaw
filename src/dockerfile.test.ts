@@ -37,9 +37,9 @@ describe("Dockerfile", () => {
     expect(dockerfile).toContain("apt-get install -y --no-install-recommends xvfb");
   });
 
-  it("supports optional Codex CLI installs for the bundled codex-cli backend", async () => {
+  it("keeps Codex CLI installs enabled by default for the bundled codex-cli backend", async () => {
     const dockerfile = await readFile(dockerfilePath, "utf8");
-    expect(dockerfile).toContain('ARG OPENCLAW_INSTALL_CODEX_CLI=""');
+    expect(dockerfile).toContain('ARG OPENCLAW_INSTALL_CODEX_CLI="1"');
     expect(dockerfile).toContain('ARG OPENCLAW_CODEX_VERSION="rust-v0.94.0"');
     expect(dockerfile).toContain(
       'curl -fsSL "https://github.com/openai/codex/releases/download/${OPENCLAW_CODEX_VERSION}/codex-${codex_arch}.tar.gz"',
@@ -47,6 +47,24 @@ describe("Dockerfile", () => {
     expect(dockerfile).toContain('install -m 0755 "/tmp/codex-${codex_arch}" /usr/local/bin/codex');
     expect(dockerfile).toContain('amd64) codex_arch="x86_64-unknown-linux-gnu"');
     expect(dockerfile).toContain('arm64) codex_arch="aarch64-unknown-linux-gnu"');
+  });
+
+  it("keeps gog and goplaces installs enabled by default for fork helper workflows", async () => {
+    const dockerfile = await readFile(dockerfilePath, "utf8");
+    expect(dockerfile).toContain('ARG OPENCLAW_INSTALL_GOG_CLI="1"');
+    expect(dockerfile).toContain('ARG OPENCLAW_GOG_CLI_VERSION="v0.11.0"');
+    expect(dockerfile).toContain("Skipping gog install on unsupported architecture");
+    expect(dockerfile).toContain(
+      'curl -fsSL "https://github.com/steipete/gogcli/releases/download/${OPENCLAW_GOG_CLI_VERSION}/gogcli_${OPENCLAW_GOG_CLI_VERSION#v}_linux_amd64.tar.gz"',
+    );
+    expect(dockerfile).toContain("install -m 0755 /tmp/gog /usr/local/bin/gog");
+    expect(dockerfile).toContain('ARG OPENCLAW_INSTALL_GOPLACES="1"');
+    expect(dockerfile).toContain('ARG OPENCLAW_GOPLACES_VERSION="v0.3.0"');
+    expect(dockerfile).toContain("Skipping goplaces install on unsupported architecture");
+    expect(dockerfile).toContain(
+      'curl -fsSL "https://github.com/steipete/goplaces/releases/download/${OPENCLAW_GOPLACES_VERSION}/goplaces_${OPENCLAW_GOPLACES_VERSION#v}_linux_amd64.tar.gz"',
+    );
+    expect(dockerfile).toContain("install -m 0755 /tmp/goplaces /usr/local/bin/goplaces");
   });
 
   it("prunes runtime dependencies after the build stage", async () => {
